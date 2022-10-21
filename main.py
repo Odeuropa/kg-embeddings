@@ -43,3 +43,12 @@ transformer = RDF2VecTransformer(
 
 print('Generating embeddings...')
 embeddings, literals = transformer.fit_transform(kg, entities)
+with open('./embeddings.txt', 'w') as f:
+    for e in embeddings:
+        f.write(' '.join(e))
+        f.write('\n')
+
+with open('./literals.txt', 'w') as f:
+    for l in literals:
+        f.write(' '.join(l))
+        f.write('\n')
