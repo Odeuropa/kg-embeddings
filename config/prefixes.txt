@@ -1,0 +1,6 @@
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX ecrm: <http://erlangen-crm.org/current/>
+PREFIX gn: <http://www.geonames.org/ontology#>
+PREFIX od: <http://data.odeuropa.eu/ontology/>
+PREFIX reo: <https://read-it.acc.hum.uu.nl/ontology#>
+PREFIX schema: <https://schema.org/>

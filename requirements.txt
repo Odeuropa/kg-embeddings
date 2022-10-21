@@ -1,0 +1,7 @@
+SPARQLWrapper
+pyRDF2vec
+tqdm
+nest_asyncio
+gensim
+aiohttp
+requests

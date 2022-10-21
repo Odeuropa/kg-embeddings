@@ -1,0 +1,4 @@
+schema:birthDate / time:hasBeginning
+schema:dateCreated / time:hasBeginning
+schema:deathDate / time:hasBeginning
+time:hasTime / time:hasBeginning
