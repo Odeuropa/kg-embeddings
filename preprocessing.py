@@ -23,7 +23,7 @@ for p in tqdm(props):
     with open(os.path.join(data_folder, p.replace(':', '_') + '.csv'), 'wb') as file:
         file.write(ret)
 
-with open(os.path.join(config_folder, 'all_vocs_entities.rq'), 'r') as file:
+with open(os.path.join(config_folder, 'get_entities.rq'), 'r') as file:
     query = file.read()
 
 sparql.setQuery(query)
