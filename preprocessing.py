@@ -30,3 +30,12 @@ sparql.setQuery(query)
 ret = sparql.queryAndConvert()
 with open(os.path.join('./', 'entities.txt'), 'wb') as file:
     file.write(ret)
+
+
+with open(os.path.join(config_folder, 'get_smells.rq'), 'r') as file:
+    query = file.read()
+
+sparql.setQuery(query)
+ret = sparql.queryAndConvert()
+with open(os.path.join('./', 'smells.txt'), 'wb') as file:
+    file.write(ret)

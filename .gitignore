@@ -5,6 +5,7 @@ __pycache__/
 
 data/
 entities.txt
+embeddings.txt
 .idea
 # C extensions
 *.so

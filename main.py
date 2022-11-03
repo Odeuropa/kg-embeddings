@@ -43,7 +43,8 @@ transformer = RDF2VecTransformer(
 
 print('Generating embeddings...')
 embeddings, literals = transformer.fit_transform(kg, entities)
-embeddings = np.asarray([entities[i+1] + x for i, x in enumerate(embeddings)])
-literals = np.asarray([entities[i+1] + x for i, x in enumerate(literals)])
-np.savetxt('./embeddings.txt', embeddings, delimiter=" ")
-np.savetxt('./literals.txt', literals, delimiter=" ")
+literals = np.insert(np.array(literals, dtype=str), 0, entities, axis=1)
+embeddings = [[entities[i]] + ['%.18e' % y for y in x] for i, x in enumerate(embeddings)]
+np.savetxt('./embeddings.txt', embeddings, delimiter=" ", fmt='%s')
+if len(literals) > 0 and len(literals[0]) > 0:
+    np.savetxt('./literals.txt', literals, delimiter=" ", fmt='%s')

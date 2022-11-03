@@ -1,4 +1,6 @@
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-SELECT distinct ?s where {
+SELECT distinct ?s
+FROM onto:disable-sameAs
+WHERE {
      ?s skos:inScheme ?o .
 }
