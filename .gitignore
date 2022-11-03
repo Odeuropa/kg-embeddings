@@ -4,8 +4,6 @@ __pycache__/
 *$py.class
 
 data/
-entities.txt
-embeddings.txt
 .idea
 # C extensions
 *.so
