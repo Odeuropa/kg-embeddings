@@ -10,10 +10,12 @@ from tqdm import tqdm
 
 DATA_FOLDER = './data'
 ENTITIES_PATH = './entities.txt'
+OUTPUT_FOLDER = './out'
 
 
-def run(entities_path, data_folder):
+def run(entities_path, data_folder, output_folder):
     kg = KG()
+    os.makedirs(output_folder, exist_ok=True)
 
     print('Reading graph..')
     for x in tqdm(os.listdir(data_folder)):
@@ -47,17 +49,17 @@ def run(entities_path, data_folder):
 
     print('Generating embeddings...')
     embeddings, literals = transformer.fit_transform(kg, entities)
-    literals = np.insert(np.array(literals, dtype=str), 0, entities, axis=1)
     embeddings = [[entities[i]] + ['%.18e' % y for y in x] for i, x in enumerate(embeddings)]
-    np.savetxt('./embeddings.txt', embeddings, delimiter=" ", fmt='%s')
+    np.savetxt(os.path.join(output_folder, './embeddings.txt'), embeddings, delimiter=" ", fmt='%s')
     if len(literals) > 0 and len(literals[0]) > 0:
-        np.savetxt('./literals.txt', literals, delimiter=" ", fmt='%s')
+        literals = np.insert(np.array(literals, dtype=str), 0, entities, axis=1)
+        np.savetxt(os.path.join(output_folder, './literals.txt'), literals, delimiter=" ", fmt='%s')
 
 
 parser = argparse.ArgumentParser('KG generation')
 parser.add_argument('entities', default=ENTITIES_PATH)
-parser.add_argument('data', default=DATA_FOLDER)
+parser.add_argument('--data', '-d', default=DATA_FOLDER)
+parser.add_argument('--output', '-o', default=OUTPUT_FOLDER)
 
 args = parser.parse_args()
-run(args.entities, args.data)
-
+run(args.entities, args.data, args.output)
