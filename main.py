@@ -58,8 +58,6 @@ def run(entities_path, data_folder):
 
 
 if __name__ == '__main__':
-    # freeze_support()
-
     parser = argparse.ArgumentParser('KG generation')
     parser.add_argument('entities', default=ENTITIES_PATH)
     parser.add_argument('--data', '-d', default=DATA_FOLDER)

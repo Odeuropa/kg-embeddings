@@ -1,6 +1,6 @@
 # KG Embeddings
 
-Generate embeddings on the graph, with RDF2Vec, using [.
+Generate embeddings on the graph, with RDF2Vec, using [https://github.com/IBCNServices/pyRDF2Vec](https://github.com/IBCNServices/pyRDF2Vec).
 
 ## Training
 
