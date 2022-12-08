@@ -1,21 +1,19 @@
 import csv
 import os
 import argparse
-import numpy as np
 from pyrdf2vec import RDF2VecTransformer
 from pyrdf2vec.embedders import Word2Vec
 from pyrdf2vec.graphs import KG, Vertex
 from pyrdf2vec.walkers import RandomWalker
+from gensim.models import KeyedVectors
 from tqdm import tqdm
 
 DATA_FOLDER = './data'
-ENTITIES_PATH = './entities.txt'
-OUTPUT_FOLDER = './out'
+ENTITIES_PATH = 'voc.txt'
 
 
-def run(entities_path, data_folder, output_folder):
+def run(entities_path, data_folder):
     kg = KG()
-    os.makedirs(output_folder, exist_ok=True)
 
     print('Reading graph..')
     for x in tqdm(os.listdir(data_folder)):
@@ -23,13 +21,13 @@ def run(entities_path, data_folder, output_folder):
             csv_reader = csv.reader(f, delimiter=',')
 
             first = True
-            for s, p, o in csv_reader:
+            for s, o in csv_reader:
                 if first:
                     first = False
                     continue
                 subj = Vertex(s)
                 obj = Vertex(o)
-                pred = Vertex(p, predicate=True, vprev=subj, vnext=obj)
+                pred = Vertex(x, predicate=True, vprev=subj, vnext=obj)
                 kg.add_walk(subj, pred, obj)
 
     print('Nb of vertices:', len(kg._vertices))
@@ -42,24 +40,29 @@ def run(entities_path, data_folder, output_folder):
     print('Nb of entities for which we are computing embeddings:', len(entities))
 
     transformer = RDF2VecTransformer(
-        Word2Vec(epochs=10),
-        walkers=[RandomWalker(4, 10, with_reverse=False, n_jobs=4)],
+        Word2Vec(epochs=100),
+        walkers=[RandomWalker(max_depth=4, max_walks=100, with_reverse=False, n_jobs=4)],
         # verbose=1
     )
 
     print('Generating embeddings...')
-    embeddings, literals = transformer.fit_transform(kg, entities)
-    embeddings = [[entities[i]] + ['%.18e' % y for y in x] for i, x in enumerate(embeddings)]
-    np.savetxt(os.path.join(output_folder, './embeddings.txt'), embeddings, delimiter=" ", fmt='%s')
-    if len(literals) > 0 and len(literals[0]) > 0:
-        literals = np.insert(np.array(literals, dtype=str), 0, entities, axis=1)
-        np.savetxt(os.path.join(output_folder, './literals.txt'), literals, delimiter=" ", fmt='%s')
+    transformer.fit(transformer.get_walks(kg, entities), False)
+    entities = [e for e in entities if e in transformer.embedder._model.wv]
+    embeddings, literals = transformer.transform(kg, entities)
+
+    kv = KeyedVectors(len(embeddings[0]))
+    for (emb, uri) in tqdm(zip(embeddings, entities)):
+        kv.add_vector(uri, emb)
+
+    kv.save(entities_path.replace('.txt','.kv'))
 
 
-parser = argparse.ArgumentParser('KG generation')
-parser.add_argument('entities', default=ENTITIES_PATH)
-parser.add_argument('--data', '-d', default=DATA_FOLDER)
-parser.add_argument('--output', '-o', default=OUTPUT_FOLDER)
+if __name__ == '__main__':
+    # freeze_support()
 
-args = parser.parse_args()
-run(args.entities, args.data, args.output)
+    parser = argparse.ArgumentParser('KG generation')
+    parser.add_argument('entities', default=ENTITIES_PATH)
+    parser.add_argument('--data', '-d', default=DATA_FOLDER)
+
+    args = parser.parse_args()
+    run(args.entities, args.data)

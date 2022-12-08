@@ -1,5 +1,11 @@
 PREFIX od: <http://data.odeuropa.eu/ontology/>
+PREFIX crm: <http://erlangen-crm.org/current/>
+
 SELECT distinct ?s
 WHERE {
      ?s a od:L11_Smell .
+     ?emission od:F1_generated ?s .
+     ?emission  od:F4_had_carrier | od:F3_had_source | crm:P7_took_place_at ?x .
+     ?x crm:P137_exemplifies []
+
 }
