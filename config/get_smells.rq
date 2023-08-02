@@ -3,9 +3,12 @@ PREFIX crm: <http://erlangen-crm.org/current/>
 
 SELECT distinct ?s
 WHERE {
+    GRAPH ?g {
      ?s a od:L11_Smell .
+    }
      ?emission od:F1_generated ?s .
      ?emission  od:F4_had_carrier | od:F3_had_source | crm:P7_took_place_at ?x .
      ?x crm:P137_exemplifies []
 
+    FILTER (?g != 'http://data.odeuropa.eu/image-annotation')
 }

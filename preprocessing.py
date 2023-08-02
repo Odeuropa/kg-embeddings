@@ -18,7 +18,10 @@ sparql.setReturnFormat(CSV)
 os.makedirs(data_folder, exist_ok=True)
 
 for p in tqdm(props):
-    q = '\n'.join(prefixes) + '\n' + 'SELECT * WHERE { ?s %s ?o }' % p
+    q = '\n'.join(prefixes) + '\n' + \
+        'SELECT ?s ?o FROM <http://www.ontotext.com/explicit>' \
+        'WHERE { GRAPH ?g { ?s %s ?o } ' \
+        'FILTER (?g != "http://data.odeuropa.eu/image-annotation")}' % p
     sparql.setQuery(q)
     ret = sparql.queryAndConvert()
     with open(os.path.join(data_folder, urllib.parse.quote(p.replace(':', '_'), safe='') + '.csv'), 'wb') as file:

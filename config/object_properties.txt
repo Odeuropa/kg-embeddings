@@ -1,18 +1,17 @@
 ^ecrm:P140_assigned_attribute_to / ecrm:P141_assigned
 ecrm:P67_refers_to
-ecrm:P7_took_place_at
+ecrm:P7_took_place_at / ecrm:P137_exemplifies
 ecrm:P89_falls_within
 gn:parentCountry
-od:F1_generated /^ od:F2_perceived
+od:F1_generated
+od:F2_perceived
 od:F3_had_source / ecrm:P137_exemplifies
 od:F4_had_carrier / ecrm:P137_exemplifies
 od:F5_involved_gesture / ecrm:P137_exemplifies
 od:F6_evoked / ecrm:P137_exemplifies
 reo:readP1
-ecrm:P14_carried_out_by / reo:readP27
+^reo:readP27 / ecrm:P137_exemplifies
 schema:author
-schema:genre
-schema:locationCreated
 skos:broader
 skos:member
 skos:narrower

@@ -3,5 +3,12 @@ PREFIX onto: <http://www.ontotext.com/>
 SELECT distinct ?s
 FROM onto:explicit
 WHERE {
-     ?s skos:inScheme ?o .
+    GRAPH ?g {
+     ?s skos:inScheme ?o ; skos:prefLabel ?label.
+     FILTER (lang(?label)='en')
+    }
+
+    FILTER (?g != 'http://data.odeuropa.eu/vocabulary/visual-art-types')
+    FILTER (?g != 'http://data.odeuropa.eu/getty' )
+    FILTER (!CONTAINS(str(?g), 'odorants'))
 }

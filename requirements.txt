@@ -5,3 +5,6 @@ nest_asyncio
 gensim
 aiohttp
 requests
+pandas
+pykeen
+torch
