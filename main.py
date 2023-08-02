@@ -27,36 +27,37 @@ def run(entities_path, data_folder, algorithm):
 
     print('Reading graph..')
     data = []
-    for x in tqdm(os.listdir(data_folder)):
-        if not x.endswith('.csv'):
-            continue
-        with open(os.path.join(data_folder, x), 'r') as f:
-            csv_reader = csv.reader(f, delimiter=',')
+    if algorithm == 'rdf2vec' or os.path.isdir(training_path):
+        for x in tqdm(os.listdir(data_folder)):
+            if not x.endswith('.csv'):
+                continue
+            with open(os.path.join(data_folder, x), 'r') as f:
+                csv_reader = csv.reader(f, delimiter=',')
 
-            first = True
-            for s, o in csv_reader:
-                if first:
-                    first = False
-                    continue
-                subj = Vertex(s)
-                obj = Vertex(o)
-                pred = Vertex(x, predicate=True, vprev=subj, vnext=obj)
-                kg.add_walk(subj, pred, obj)
-                data.append((s, x, o))
+                first = True
+                for s, o in csv_reader:
+                    if first:
+                        first = False
+                        continue
+                    subj = Vertex(s)
+                    obj = Vertex(o)
+                    pred = Vertex(x, predicate=True, vprev=subj, vnext=obj)
+                    kg.add_walk(subj, pred, obj)
+                    data.append((s, x, o))
 
-    print('Nb of vertices:', len(kg._vertices))
-    print('Nb of entities in the graph:', len(kg._entities))
+        print('Nb of vertices:', len(kg._vertices))
+        print('Nb of entities in the graph:', len(kg._entities))
 
-    if algorithm == 'rdf2vec':
-        with open(entities_path, 'r') as f:
-            entities = [x.strip() for x in f.readlines()][1:]
-            entities = [x for x in entities if kg.is_exist([x])]
+        if algorithm == 'rdf2vec':
+            with open(entities_path, 'r') as f:
+                entities = [x.strip() for x in f.readlines()][1:]
+                entities = [x for x in entities if kg.is_exist([x])]
 
-        print('Nb of entities for which we are computing embeddings:', len(entities))
-        out_path = entities_path.replace('.txt', '.kv')
-        train_rdf2vec(kg, entities, out_path)
-    else:
-        train_pykeen(data, algorithm)
+            print('Nb of entities for which we are computing embeddings:', len(entities))
+            out_path = entities_path.replace('.txt', '.kv')
+            train_rdf2vec(kg, entities, out_path)
+        else:
+            train_pykeen(data, algorithm)
 
 
 def train_rdf2vec(kg, entities, out_path):
@@ -101,7 +102,7 @@ def train_pykeen(data, algorithm):
         testing=testing,
         model=algorithm,
         model_kwargs=dict(embedding_dim=embedding_dim),
-        training_kwargs=dict(num_epochs=200),
+        training_kwargs=dict(num_epochs=200, batch_size=8),
         random_seed=42)
 
     entity_labels = training.entity_labeling.all_labels()
