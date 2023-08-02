@@ -27,7 +27,7 @@ def run(entities_path, data_folder, algorithm):
 
     print('Reading graph..')
     data = []
-    if algorithm == 'rdf2vec' or os.path.isdir(training_path):
+    if algorithm == 'rdf2vec' or not os.path.isdir(training_path):
         for x in tqdm(os.listdir(data_folder)):
             if not x.endswith('.csv'):
                 continue
@@ -48,16 +48,16 @@ def run(entities_path, data_folder, algorithm):
         print('Nb of vertices:', len(kg._vertices))
         print('Nb of entities in the graph:', len(kg._entities))
 
-        if algorithm == 'rdf2vec':
-            with open(entities_path, 'r') as f:
-                entities = [x.strip() for x in f.readlines()][1:]
-                entities = [x for x in entities if kg.is_exist([x])]
+    if algorithm == 'rdf2vec':
+        with open(entities_path, 'r') as f:
+            entities = [x.strip() for x in f.readlines()][1:]
+            entities = [x for x in entities if kg.is_exist([x])]
 
-            print('Nb of entities for which we are computing embeddings:', len(entities))
-            out_path = entities_path.replace('.txt', '.kv')
-            train_rdf2vec(kg, entities, out_path)
-        else:
-            train_pykeen(data, algorithm)
+        print('Nb of entities for which we are computing embeddings:', len(entities))
+        out_path = entities_path.replace('.txt', '.kv')
+        train_rdf2vec(kg, entities, out_path)
+    else:
+        train_pykeen(data, algorithm)
 
 
 def train_rdf2vec(kg, entities, out_path):
@@ -101,8 +101,8 @@ def train_pykeen(data, algorithm):
         training=training,
         testing=testing,
         model=algorithm,
-        model_kwargs=dict(embedding_dim=embedding_dim),
-        training_kwargs=dict(num_epochs=200, batch_size=8),
+        model_kwargs=dict(embedding_dim=embedding_dim, automatic_memory_optimization=True),
+        training_kwargs=dict(num_epochs=200, batch_size=4, automatic_memory_optimization=True),
         random_seed=42)
 
     entity_labels = training.entity_labeling.all_labels()
