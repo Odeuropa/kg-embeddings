@@ -1,6 +1,6 @@
 # KG Embeddings
 
-Generate embeddings on the graph, with RDF2Vec, using [https://github.com/IBCNServices/pyRDF2Vec](https://github.com/IBCNServices/pyRDF2Vec).
+Generate embeddings on the graph, with RDF2Vec - using [pyRDF2Vec](https://github.com/IBCNServices/pyRDF2Vec) -, TransE, RotatE, DistMult - using [pyKEEN](https://github.com/pykeen/pykeen).
 
 ## Training
 
@@ -16,17 +16,17 @@ Run the following commands for downloading the data on your machine:
 
 Finally, generate the embeddings using:
     
-    python main.py [entities list]
+    python main.py [entities list] [-a algorith_name]
 
 where `entities list` is a list of entities uri (1 per line) in a textual file.
-Following the generated files by the preprocessing, you can run:
+Following the generated files by the preprocessing, you can run (for example):
 
-    python main.py voc.txt
-    python main.py smells.txt
+    python main.py voc
+    python main.py smells -a TransE
 
 This is producing an `[entity].kv` file, which is a [gensim's KeyedVector](https://radimrehurek.com/gensim/models/keyedvectors.html) file.
 
-# Load and use embeddings
+## Load and use embeddings
 
 Load embeddings in this way:
 

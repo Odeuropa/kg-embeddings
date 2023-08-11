@@ -87,6 +87,7 @@ def train_pykeen(data, algorithm):
         testing = TriplesFactory.from_path_binary(testing_path)
     else:
         # Generate triples from the graph data
+        print('Splitting train and test')
         df = pd.DataFrame.from_dict(data)
         tf = TriplesFactory.from_labeled_triples(df.values)
 
@@ -101,8 +102,8 @@ def train_pykeen(data, algorithm):
         training=training,
         testing=testing,
         model=algorithm,
-        model_kwargs=dict(embedding_dim=embedding_dim, automatic_memory_optimization=True),
-        training_kwargs=dict(num_epochs=200, batch_size=4, automatic_memory_optimization=True),
+        model_kwargs=dict(embedding_dim=embedding_dim),
+        training_kwargs=dict(num_epochs=200, batch_size=32),
         random_seed=42)
 
     entity_labels = training.entity_labeling.all_labels()
@@ -111,7 +112,7 @@ def train_pykeen(data, algorithm):
     # retrieve the embeddings using entity ids
     entity_embeddings = result.model.entity_representations[0](indices=entity_ids)
     # create a dictionary of entity labels and embeddings
-    entity_embeddings_dict = dict(zip(entity_labels, entity_embeddings.detach().numpy()))
+    entity_embeddings_dict = dict(zip(entity_labels, entity_embeddings.detach().cpu().numpy()))
 
     save_word2vec_format(f'embeddings/{algorithm}_entity.bin', entity_embeddings_dict, embedding_dim)
 
@@ -122,7 +123,7 @@ def train_pykeen(data, algorithm):
     # retrieve the embeddings using relation ids
     relation_embeddings = result.model.relation_representations[0](indices=relation_ids)
     # create a dictionary of relation labels and embeddings
-    relation_embeddings_dict = dict(zip(relation_labels, relation_embeddings.detach().numpy()))
+    relation_embeddings_dict = dict(zip(relation_labels, relation_embeddings.detach().cpu().numpy()))
 
     save_word2vec_format(f'embeddings/{algorithm}_relation.bin', relation_embeddings_dict, embedding_dim)
 
