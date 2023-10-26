@@ -21,6 +21,8 @@ ENTITIES_PATH = 'voc.txt'
 training_path = 'data/training'
 testing_path = 'data/testing'
 
+limit = 500
+
 
 def run(entities_path, data_folder, algorithm):
     kg = KG()
@@ -35,6 +37,7 @@ def run(entities_path, data_folder, algorithm):
                 csv_reader = csv.reader(f, delimiter=',')
 
                 first = True
+                i = 0
                 for s, o in csv_reader:
                     if first:
                         first = False
@@ -44,6 +47,9 @@ def run(entities_path, data_folder, algorithm):
                     pred = Vertex(x, predicate=True, vprev=subj, vnext=obj)
                     kg.add_walk(subj, pred, obj)
                     data.append((s, x, o))
+                    i += 1
+                    if i == limit:
+                        break
 
         print('Nb of vertices:', len(kg._vertices))
         print('Nb of entities in the graph:', len(kg._entities))
@@ -71,6 +77,7 @@ def train_rdf2vec(kg, entities, out_path):
     transformer.fit(transformer.get_walks(kg, entities), False)
     entities = [e for e in entities if e in transformer.embedder._model.wv]
     embeddings, literals = transformer.transform(kg, entities)
+    transformer.save()
 
     kv = KeyedVectors(len(embeddings[0]))
     for (emb, uri) in tqdm(zip(embeddings, entities)):
@@ -93,6 +100,7 @@ def train_pykeen(data, algorithm):
 
         # split triples into train and test
         training, testing = tf.split([0.8, 0.2], random_state=42)
+
         training.to_path_binary(training_path)
         testing.to_path_binary(testing_path)
 
