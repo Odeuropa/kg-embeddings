@@ -29,11 +29,13 @@ def run(entities_path, data_folder, algorithm):
 
     print('Reading graph..')
     data = []
+    preds = []
     if algorithm == 'rdf2vec' or not os.path.isdir(training_path):
         for x in tqdm(os.listdir(data_folder)):
             if not x.endswith('.csv'):
                 continue
             with open(os.path.join(data_folder, x), 'r') as f:
+                preds.append(x)
                 csv_reader = csv.reader(f, delimiter=',')
 
                 first = True
@@ -55,9 +57,18 @@ def run(entities_path, data_folder, algorithm):
         print('Nb of entities in the graph:', len(kg._entities))
 
     if algorithm == 'rdf2vec':
-        with open(entities_path, 'r') as f:
-            entities = [x.strip() for x in f.readlines()][1:]
-            entities = [x for x in entities if kg.is_exist([x])]
+        if entities_path == 'all':
+            entities = []
+            for pt in ['voc.txt', 'smells.txt']:
+                with open(pt, 'r') as f:
+                    ent = [x.strip() for x in f.readlines()][1:]
+                    entities += [x for x in ent if kg.is_exist([x])]
+
+            entities += preds
+        else:
+            with open(entities_path, 'r') as f:
+                entities = [x.strip() for x in f.readlines()][1:]
+                entities = [x for x in entities if kg.is_exist([x])]
 
         print('Nb of entities for which we are computing embeddings:', len(entities))
         out_path = entities_path.replace('.txt', '.kv')
@@ -76,6 +87,7 @@ def train_rdf2vec(kg, entities, out_path):
     print('Generating embeddings...')
     transformer.fit(transformer.get_walks(kg, entities), False)
     entities = [e for e in entities if e in transformer.embedder._model.wv]
+
     embeddings, literals = transformer.transform(kg, entities)
     transformer.save()
 

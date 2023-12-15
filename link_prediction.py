@@ -1,86 +1,78 @@
-import numpy as np
+import csv
+import math
+
 from gensim.models import KeyedVectors
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+from tqdm import tqdm
 
-from kbc_rdf2vec.dataset import DataSet
-from kbc_rdf2vec.prediction import (
-    PredictionFunctionEnum,
-    RandomPredictionFunction,
-    AveragePredicateAdditionPredictionFunction,
+kv = KeyedVectors.load("embeddings/smells.kv")
+emissions = {}
+with open('data/od_F1_generated.csv') as f:
+    csv_reader = csv.DictReader(f)
+
+    first = True
+    for row in csv_reader:
+        if first:
+            first = False
+            continue
+
+        emissions[row['s']] = row['o']
+
+smell_sources = {}
+with open('data/od_F3_had_source%20%2F%20ecrm_P137_exemplifies.csv') as f:
+    csv_reader = csv.DictReader(f)
+
+    first = True
+    for row in csv_reader:
+        if first:
+            first = False
+            continue
+
+        smell = emissions[row['s']]
+        if smell not in smell_sources:
+            smell_sources[smell] = []
+        smell_sources[smell].append(row['o'])
+
+
+def smell_source(uri):
+    global smell_sources
+    if uri not in smell_sources:
+        return None
+    return smell_sources[uri]
+
+
+embeddings = kv.vectors
+
+
+pos = list(range(len(embeddings)))
+sm_sources = [smell_source(kv.index_to_key[x]) for x in tqdm(pos)]
+pos_filtered = [p for p in pos if sm_sources[p]]
+
+split_at = math.floor(len(embeddings)*0.8)
+train_pos = pos_filtered[0:split_at]
+test_pos = pos_filtered[split_at:]
+train_embeddings = embeddings[train_pos]
+test_embeddings = embeddings[test_pos]
+
+train_x = [kv.index_to_key[x] for x in train_pos]
+train_y = [smell_source(kv.index_to_key[x])[0] for x in tqdm(train_pos)]
+test_y = [smell_source(kv.index_to_key[x])[0] for x in tqdm(test_pos)]
+
+print('Training started')
+clf = GridSearchCV(
+    SVC(random_state=42), {"C": [10 ** i for i in range(-3, 4)]}
 )
+clf.fit(train_embeddings, train_y)
+print('Training finished')
 
-print('load embeddings')
-kv = KeyedVectors.load_word2vec_format("embeddings/transr_entity.bin", binary=True)
-for function in PredictionFunctionEnum:
-    print(function)
-
-    # forbid reflexive
-    function_instance = function.get_instance(
-        keyed_vectors=kv,
-        data_set=DataSet.WN18,
-        is_reflexive_match_allowed=False,
-    )
-    assert function_instance is not None
-
-    h = "09590495"
-    t = "09689152"
-
-    result_h_prediction = function_instance.predict_heads([h, 'od:F3_had_source / ecrm:P137_exemplifies', t], n=None)
-    # make sure that the tail is not predicted when predicting heads
-    assert t not in result_h_prediction
-
-    # make sure that the correct h appears in the prediction
-    assert h in [x[0] for x in result_h_prediction]
-
-    # make sure that the returned list is sorted in descending order of the confidence
-    smallest_confidence = 100.0
-    for p, confidence in result_h_prediction:
-        assert (
-                smallest_confidence >= confidence
-        ), f"Result not correctly sorted for {function}"
-        if confidence < smallest_confidence:
-            smallest_confidence = confidence
-
-    # perform test on tail prediction
-    result_t_prediction = function_instance.predict_tails([h, l, t], n=None)
-
-    # make sure that the head is not predicted when predicting tails
-    assert (
-            h not in result_t_prediction
-    ), f"Failure for {function}: Found head as prediction of tail."
-
-    # make sure that the solution appears for tail predictions
-    assert t in [
-        x[0] for x in result_t_prediction
-    ], f"Failure for {function}: Did not find correct prediction of tail."
-
-    smallest_confidence = 100.0
-    for p, confidence in result_t_prediction:
-        assert (
-                smallest_confidence >= confidence
-        ), f"Result not correctly sorted for {function}"
-        if confidence < smallest_confidence:
-            smallest_confidence = confidence
-
-    # allow reflexive (but exclude most similar due to implementation of gensim excluding those always)
-    if (
-            function == PredictionFunctionEnum.MOST_SIMILAR
-            or function == PredictionFunctionEnum.PREDICATE_AVERAGING_MOST_SIMILAR
-    ):
-        continue
-
-    function_instance = function.get_instance(
-        keyed_vectors=kv, data_set=DataSet.WN18, is_reflexive_match_allowed=True
-    )
-    assert function_instance is not None
-
-    # make sure the solution is found (head prediction)
-    result = function_instance.predict_heads([h, l, t], n=None)
-    assert h in (
-        item[0] for item in result
-    ), f"Head {h} not found in prediction of function {function}."
-
-    # make sure the solution is found (tail prediction)
-    result = function_instance.predict_tails([h, l, t], n=None)
-    assert t in (
-        item[0] for item in result
-    ), f"Tail {t} not found in prediction of function {function}."
+print('Prediction started')
+# Evaluate the Support Vector Machine on test embeddings.
+predictions = clf.predict(test_embeddings)
+print(
+    f"Predicted {len(test_embeddings)} entities with an accuracy of "
+    + f"{accuracy_score(test_y, predictions) * 100 :.4f}%"
+)
+print(f"Confusion Matrix ([[TN, FP], [FN, TP]]):")
+print(confusion_matrix(test_y, predictions))
