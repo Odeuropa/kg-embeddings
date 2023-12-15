@@ -7,6 +7,14 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
 from tqdm import tqdm
 
+
+def flatten_concatenation(matrix):
+    flat_list = []
+    for row in matrix:
+        flat_list += row
+    return flat_list
+
+
 kv = KeyedVectors.load("embeddings/smells.kv")
 emissions = {}
 with open('data/od_F1_generated.csv') as f:
@@ -50,15 +58,34 @@ pos = list(range(len(embeddings)))
 sm_sources = [smell_source(kv.index_to_key[x]) for x in tqdm(pos)]
 pos_filtered = [p for p in pos if sm_sources[p]]
 
-split_at = math.floor(len(embeddings)*0.8)
+from collections import Counter
+
+keep_keys = []
+for key, value in dict(Counter(flatten_concatenation([sm_sources[p] for p in pos_filtered]))).items():
+    if value > 40:
+        keep_keys.append(key)
+
+def clean(s_list):
+    if s_list is None:
+        return []
+    return set(s_list).intersection(set(keep_keys))
+
+sm_sources = [clean(s) for s in sm_sources]
+pos_filtered = [p for p in pos if len(sm_sources[p])>0]
+
+
+split_at = math.floor(len(embeddings)*0.9)
 train_pos = pos_filtered[0:split_at]
 test_pos = pos_filtered[split_at:]
 train_embeddings = embeddings[train_pos]
 test_embeddings = embeddings[test_pos]
 
 train_x = [kv.index_to_key[x] for x in train_pos]
-train_y = [smell_source(kv.index_to_key[x])[0] for x in tqdm(train_pos)]
-test_y = [smell_source(kv.index_to_key[x])[0] for x in tqdm(test_pos)]
+train_y = [list(clean(smell_source(kv.index_to_key[x])))[0] for x in tqdm(train_pos)]
+test_y = [list(clean(smell_source(kv.index_to_key[x])))[0] for x in tqdm(test_pos)]
+
+print(len(train_y))
+print(len(test_y))
 
 print('Training started')
 clf = GridSearchCV(
