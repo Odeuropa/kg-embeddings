@@ -1,6 +1,6 @@
 # KG Embeddings
 
-Generate embeddings on the graph, with RDF2Vec - using [pyRDF2Vec](https://github.com/IBCNServices/pyRDF2Vec) -, TransE, RotatE, DistMult - using [pyKEEN](https://github.com/pykeen/pykeen).
+Generate embeddings on the graph, with RDF2Vec - using [pyRDF2Vec](https://github.com/IBCNServices/pyRDF2Vec) -, TransE, DistMult - using [pyKEEN](https://github.com/pykeen/pykeen).
 
 ## Training
 
