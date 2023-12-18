@@ -39,3 +39,9 @@ Search the most similar to a term:
     # 0.7755   http://data.odeuropa.eu/vocabulary/olfactory-objects/267   Frankincense
 
 Refer to [gensim's documentation](https://radimrehurek.com/gensim/models/keyedvectors.html) for further possibilities.
+
+## Clustering and link predicting
+
+We performed experiment for clustering and link predicting using the following code:
+* Clustering: [notebook](./Clustering.ipynb)
+* Link prediction with TransE and DistMult: [notebook](./link_prediction.py)
