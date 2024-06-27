@@ -58,6 +58,7 @@ def run(entities_path, data_folder, algorithm):
                     pred = Vertex(p, predicate=True, vprev=subj, vnext=obj)
                     kg.add_walk(subj, pred, obj)
                     data.append((s, p, o))
+                    preds.append(p)
         else:
             for x in tqdm(os.listdir(data_folder)):
                 if not x.endswith('.csv'):
