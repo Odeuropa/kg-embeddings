@@ -51,7 +51,7 @@ def run(entities_path, data_folder, algorithm):
     if algorithm == 'rdf2vec' or not os.path.isdir(training_path):
         if data_folder.endswith('csv'):
             with open(os.path.join(data_folder), 'r') as f:
-                 csv_reader = csv.reader(f, delimiter=',')
+                csv_reader = csv.reader(f, delimiter=',')
                 for s, p, o in csv_reader:
                     subj = Vertex(s)
                     obj = Vertex(o)
