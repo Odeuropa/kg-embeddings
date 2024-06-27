@@ -159,7 +159,7 @@ def run(data_folder, threshold=3):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('KG generation')
     parser.add_argument('--data', '-d', default=DATA_FOLDER)
-    parser.add_argument('--threshold', '-t', default=3)
+    parser.add_argument('--threshold', '-t', default=3, type=int)
 
     args = parser.parse_args()
     run(args.data, args.threshold)
