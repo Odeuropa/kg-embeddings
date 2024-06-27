@@ -21,7 +21,24 @@ ENTITIES_PATH = 'voc.txt'
 training_path = 'data/training'
 testing_path = 'data/testing'
 
-limit = 500
+limit = -1
+
+
+def density(n_vertices, n_edges):
+    return n_edges / (n_vertices * (n_vertices - 1))
+
+
+def is_pred_relevant(pred):
+    p = pred.replace('%5E', '')
+    return p.startswith('od_') or p.startswith('ecrm') or p.startswith('reo')
+
+
+def smell_data_completeness(preds, ents, triples):
+    relevant_preds = [p for p in preds if is_pred_relevant(p)]
+    relevant_ents = [e.name for e in ents if e.name.startswith('http://data.odeuropa.eu/smell/')]
+    # relevant_triples = [t for t in triples if t[1] in relevant_preds]
+    relevant_triples = [t for t in triples if t[0] in relevant_ents]
+    return len(relevant_triples) / (len(relevant_ents) * len(relevant_preds))
 
 
 def run(entities_path, data_folder, algorithm):
@@ -30,31 +47,46 @@ def run(entities_path, data_folder, algorithm):
     print('Reading graph..')
     data = []
     preds = []
-    if algorithm == 'rdf2vec' or not os.path.isdir(training_path):
-        for x in tqdm(os.listdir(data_folder)):
-            if not x.endswith('.csv'):
-                continue
-            with open(os.path.join(data_folder, x), 'r') as f:
-                preds.append(x)
-                csv_reader = csv.reader(f, delimiter=',')
 
-                first = True
-                i = 0
-                for s, o in csv_reader:
-                    if first:
-                        first = False
-                        continue
+    if algorithm == 'rdf2vec' or not os.path.isdir(training_path):
+        if data_folder.endswith('csv'):
+            with open(os.path.join(data_folder), 'r') as f:
+                 csv_reader = csv.reader(f, delimiter=',')
+                for s, p, o in csv_reader:
                     subj = Vertex(s)
                     obj = Vertex(o)
-                    pred = Vertex(x, predicate=True, vprev=subj, vnext=obj)
+                    pred = Vertex(p, predicate=True, vprev=subj, vnext=obj)
                     kg.add_walk(subj, pred, obj)
-                    data.append((s, x, o))
-                    i += 1
-                    if i == limit:
-                        break
+                    data.append((s, p, o))
+        else:
+            for x in tqdm(os.listdir(data_folder)):
+                if not x.endswith('.csv'):
+                    continue
+                with open(os.path.join(data_folder, x), 'r') as f:
+                    preds.append(x)
+                    csv_reader = csv.reader(f, delimiter=',')
+
+                    first = True
+                    i = 0
+                    for s, o in csv_reader:
+                        if first:
+                            first = False
+                            continue
+                        subj = Vertex(s)
+                        obj = Vertex(o)
+                        pred = Vertex(x, predicate=True, vprev=subj, vnext=obj)
+                        kg.add_walk(subj, pred, obj)
+                        data.append((s, x, o))
+                        i += 1
+                        if i == limit:
+                            break
 
         print('Nb of vertices:', len(kg._vertices))
         print('Nb of entities in the graph:', len(kg._entities))
+        print('Nb of predicates in the graph:', len(set(preds)))
+        print('Nb of edges in the graph:', len(data))
+        print('Density: ', density(len(kg._entities), len(data)))
+        print('Smell data completeness: ', smell_data_completeness(set(preds), kg._entities, data))
 
     if algorithm == 'rdf2vec':
         if entities_path == 'all':

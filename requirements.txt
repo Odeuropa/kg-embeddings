@@ -5,7 +5,7 @@ nest_asyncio
 gensim~=4.3.1
 aiohttp
 requests
-pandas~=2.0.3
+pandas~=2.1.4
 pykeen~=1.10.1
 torch~=1.13.1
 numpy~=1.24.2
