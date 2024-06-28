@@ -13,7 +13,7 @@ ENTITIES_PATH = 'voc.txt'
 training_path = 'data/training'
 testing_path = 'data/testing'
 
-limit = 500
+limit = -1
 
 
 def density(n_vertices, n_edges):
@@ -26,10 +26,10 @@ def is_pred_relevant(pred):
 
 
 def smell_data_completeness(preds, ents, triples):
-    relevant_preds = [p for p in preds if is_pred_relevant(p)]
+    relevant_preds = preds
     relevant_ents = [e.name for e in ents if e.name.startswith('http://data.odeuropa.eu/smell/')]
     # relevant_triples = [t for t in triples if t[1] in relevant_preds]
-    relevant_triples = [t for t in triples if t[0] in relevant_ents]
+    relevant_triples = triples
     return len(relevant_triples) / (len(relevant_ents) * len(relevant_preds))
 
 
@@ -38,6 +38,7 @@ def run(data_folder, threshold=3):
 
     print('Reading graph..')
     data = []
+    relevant_triples = []
     preds = []
     for x in tqdm(os.listdir(data_folder)):
         if not x.endswith('.csv'):
@@ -57,6 +58,8 @@ def run(data_folder, threshold=3):
                 pred = Vertex(x, predicate=True, vprev=subj, vnext=obj)
                 kg.add_walk(subj, pred, obj)
                 data.append((s, x, o))
+                if s.startswith('http://data.odeuropa.eu/smell/') or o.startswith('http://data.odeuropa.eu/smell'):
+                    relevant_triples.append((s,x,o))
                 i += 1
                 if i == limit:
                     break
@@ -68,7 +71,8 @@ def run(data_folder, threshold=3):
     print('Nb of predicates in the graph:', len(set(preds)))
     print('Nb of edges in the graph:', len(data))
     print('Density: ', density(len(kg._entities), len(data)))
-    print('Smell data completeness: ', smell_data_completeness(set(preds), kg._entities, data))
+    relevant_preds = [p for p in set(preds) if is_pred_relevant(p)]
+    print('Smell data completeness: ', smell_data_completeness(relevant_preds, kg._entities, relevant_triples))
 
     emission2smell = {}
     experience2smell = {}
@@ -110,9 +114,8 @@ def run(data_folder, threshold=3):
     print('Nb of predicates in the graph:', len(set(preds)))
     print('Nb of edges in the graph:', len(data_clean))
     print('Density: ', density(len(kg_clean._entities), len(data_clean)))
-    print('Smell data completeness: ', smell_data_completeness(set(preds), kg_clean._entities, data_clean))
+    print('Smell data completeness: ', smell_data_completeness(relevant_preds, kg_clean._entities, data_clean))
 
-    relevant_preds = [p for p in set(preds) if is_pred_relevant(p)]
     relevant_ents = [e.name for e in kg_clean._entities if e.name.startswith('http://data.odeuropa.eu/smell/')]
     relevant_triples = [t for t in data if (t[0] in relevant_ents or t[2] in relevant_ents) and t[1] in relevant_preds]
 
@@ -138,7 +141,7 @@ def run(data_folder, threshold=3):
 
     print('Nb of vertices:', len(kg2._vertices))
     print('Nb of entities in the graph:', len(kg2._entities))
-    print('Nb of predicates in the graph:', len(set(preds)))
+    print('Nb of predicates in the graph:', len(set(relevant_preds)))
     print('Nb of edges in the graph:', len(relevant_triples))
     print('Density: ', density(len(kg2._entities), len(relevant_triples)))
     print('Smell data completeness: ', smell_data_completeness(set(relevant_preds), kg2._entities, relevant_triples))
