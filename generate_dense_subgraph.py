@@ -13,7 +13,7 @@ ENTITIES_PATH = 'voc.txt'
 training_path = 'data/training'
 testing_path = 'data/testing'
 
-limit = 500
+limit = -1
 
 
 def density(n_vertices, n_edges):
