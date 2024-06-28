@@ -117,7 +117,7 @@ def run(data_folder, threshold=3):
     print('Smell data completeness: ', smell_data_completeness(relevant_preds, kg_clean._entities, data_clean))
 
     relevant_ents = [e.name for e in kg_clean._entities if e.name.startswith('http://data.odeuropa.eu/smell/')]
-    relevant_triples = [t for t in data if (t[0] in relevant_ents or t[2] in relevant_ents) and t[1] in relevant_preds]
+    relevant_triples = [t for t in relevant_triples if (t[0] in relevant_ents or t[2] in relevant_ents)]
 
     ent_triples = []
     for e in relevant_ents:
