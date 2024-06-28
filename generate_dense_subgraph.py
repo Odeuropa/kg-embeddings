@@ -73,7 +73,7 @@ def run(data_folder, threshold=3):
     print('Nb of predicates in the graph:', len(set(preds)))
     print('Nb of edges in the graph:', len(data))
     print('Density: ', density(len(kg._entities), len(data)))
-    relevant_preds = [p for p in set(preds) if is_pred_relevant(p)]
+    relevant_preds = set([p for p in set(preds) if is_pred_relevant(p)])
     print('Smell data completeness: ', smell_data_completeness(relevant_preds, kg._entities, relevant_triples))
 
     emission2smell = {}
@@ -118,12 +118,13 @@ def run(data_folder, threshold=3):
         pred = Vertex(p, predicate=True, vprev=subj, vnext=obj)
         kg_clean.add_walk(subj, pred, obj)
 
+    relevant_triples = [d for d,e in zip(data_clean,entity_index) if e is not None]
     print('Nb of vertices:', len(kg_clean._vertices))
     print('Nb of entities in the graph:', len(kg_clean._entities))
-    print('Nb of predicates in the graph:', len(set(preds)))
+    print('Nb of predicates in the graph:', len(set(relevant_preds)))
     print('Nb of edges in the graph:', len(data_clean))
     print('Density: ', density(len(kg_clean._entities), len(data_clean)))
-    print('Smell data completeness: ', smell_data_completeness(relevant_preds, kg_clean._entities, data_clean))
+    print('Smell data completeness: ', smell_data_completeness(relevant_preds, kg_clean._entities, relevant_triples))
 
     relevant_ents = [e.name for e in kg_clean._entities if e.name.startswith('http://data.odeuropa.eu/smell/')]
 
@@ -159,7 +160,7 @@ def run(data_folder, threshold=3):
     print('Nb of predicates in the graph:', len(set(relevant_preds)))
     print('Nb of edges in the graph:', len(relevant_triples))
     print('Density: ', density(len(kg2._entities), len(relevant_triples)))
-    print('Smell data completeness: ', smell_data_completeness(set(relevant_preds), kg2._entities, relevant_triples))
+    print('Smell data completeness: ', smell_data_completeness(relevant_preds, kg2._entities, relevant_triples))
 
     ent_triples2 = []
     for e in relevant_ents:
