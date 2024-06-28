@@ -13,7 +13,7 @@ ENTITIES_PATH = 'voc.txt'
 training_path = 'data/training'
 testing_path = 'data/testing'
 
-limit = -1
+limit = 500
 
 
 def density(n_vertices, n_edges):
@@ -38,6 +38,7 @@ def run(data_folder, threshold=3):
 
     print('Reading graph..')
     data = []
+    data_voc = []
     relevant_triples = []
     preds = []
     for x in tqdm(os.listdir(data_folder)):
@@ -46,7 +47,6 @@ def run(data_folder, threshold=3):
         with open(os.path.join(data_folder, x), 'r') as f:
             preds.append(x)
             csv_reader = csv.reader(f, delimiter=',')
-
             first = True
             i = 0
             for s, o in csv_reader:
@@ -59,7 +59,9 @@ def run(data_folder, threshold=3):
                 kg.add_walk(subj, pred, obj)
                 data.append((s, x, o))
                 if s.startswith('http://data.odeuropa.eu/smell/') or o.startswith('http://data.odeuropa.eu/smell'):
-                    relevant_triples.append((s,x,o))
+                    relevant_triples.append((s, x, o))
+                if x in ['skos_broader.csv', 'skos_narrower.csv']:
+                    data_voc.append((s, x, o))
                 i += 1
                 if i == limit:
                     break
@@ -87,6 +89,7 @@ def run(data_folder, threshold=3):
     print('*** CLEANING DATA ***')
     data_clean = []
     kg_clean = KG()
+    entity_index = []
     for x in data:
         s, p, o = x
         if not is_pred_relevant(p):
@@ -103,6 +106,12 @@ def run(data_folder, threshold=3):
         if s is None or o is None:
             continue
         data_clean.append((s, p, o))
+        if s.startswith('http://data.odeuropa.eu/smell/'):
+            entity_index.append(s)
+        elif s.startswith('http://data.odeuropa.eu/smell/'):
+            entity_index.append(o)
+        else:
+            entity_index.append(None)
 
         subj = Vertex(s)
         obj = Vertex(o)
@@ -117,12 +126,10 @@ def run(data_folder, threshold=3):
     print('Smell data completeness: ', smell_data_completeness(relevant_preds, kg_clean._entities, data_clean))
 
     relevant_ents = [e.name for e in kg_clean._entities if e.name.startswith('http://data.odeuropa.eu/smell/')]
-    relevant_triples = [t for t in relevant_triples if (t[0] in relevant_ents or t[2] in relevant_ents)]
 
     ent_triples = []
     for e in relevant_ents:
-        linked_triples = [t for t in relevant_triples if t[0] == e or t[2] == e]
-        ent_triples.append((e, len(linked_triples)))
+        ent_triples.append((e, entity_index.count(e)))
 
     print('#edge distribution: ' + str(Counter(elem[1] for elem in ent_triples)))
 
@@ -130,7 +137,15 @@ def run(data_folder, threshold=3):
     df = pd.DataFrame(ent_triples)
     dense_smells = df[df[1] > threshold][0].tolist()
     relevant_ents = dense_smells
-    relevant_triples = [t for t in data if (t[0] in relevant_ents or t[2] in relevant_ents) and is_pred_relevant(t[1])]
+    relevant_triples = []
+
+    entity_index2 = []
+    for i, x in enumerate(entity_index):
+        if x in relevant_ents:
+            relevant_triples.append(data_clean[i])
+            entity_index2.append(x)
+        else:
+            entity_index2.append(None)
 
     kg2 = KG()
     for s, p, o in relevant_triples:
@@ -148,14 +163,15 @@ def run(data_folder, threshold=3):
 
     ent_triples2 = []
     for e in relevant_ents:
-        linked_triples = [t for t in relevant_triples if t[0] == e or t[2] == e]
-        ent_triples2.append((e, len(linked_triples)))
+        ent_triples2.append((e, entity_index2.count(e)))
 
     print('#edge distribution: ' + str(Counter(elem[1] for elem in ent_triples2)))
 
     with open('dense_graph.csv', 'w') as f:
         file_writer = csv.writer(f)
         for x in relevant_triples:
+            file_writer.writerow(x)
+        for x in data_voc:
             file_writer.writerow(x)
 
 
