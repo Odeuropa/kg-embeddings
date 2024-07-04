@@ -126,7 +126,7 @@ def run(data_folder, threshold=3):
             file_writer.writerow(x)
 
     with open('entity_index_clean.csv', 'w') as f:
-        f.write('\n'.join(entity_index))
+        f.write('\n'.join([str(s) for s in entity_index]))
 
     print('Nb of vertices:', len(kg_clean._vertices))
     print('Nb of entities in the graph:', len(kg_clean._entities))
@@ -159,7 +159,7 @@ def run(data_folder, threshold=3):
         else:
             entity_index2.append(None)
     with open('entity_index_dense.csv', 'w') as f:
-        f.write('\n'.join(entity_index2))
+        f.write('\n'.join(str(s) for s in entity_index2))
 
 
     kg2 = KG()
