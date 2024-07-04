@@ -2,7 +2,6 @@ import argparse
 import csv
 import os
 from collections import Counter
-import pandas as pd
 
 from pyrdf2vec.graphs import KG, Vertex
 from tqdm import tqdm
@@ -118,7 +117,17 @@ def run(data_folder, threshold=3):
         pred = Vertex(p, predicate=True, vprev=subj, vnext=obj)
         kg_clean.add_walk(subj, pred, obj)
 
-    relevant_triples = [d for d,e in zip(data_clean,entity_index) if e is not None]
+    relevant_triples = [d for d, e in zip(data_clean, entity_index) if e is not None]
+    with open('clean_graph.csv', 'w') as f:
+        file_writer = csv.writer(f)
+        for x in relevant_triples:
+            file_writer.writerow(x)
+        for x in data_voc:
+            file_writer.writerow(x)
+
+    with open('entity_index_clean.csv', 'w') as f:
+        f.write('\n'.join(entity_index))
+
     print('Nb of vertices:', len(kg_clean._vertices))
     print('Nb of entities in the graph:', len(kg_clean._entities))
     print('Nb of predicates in the graph:', len(set(relevant_preds)))
@@ -129,27 +138,32 @@ def run(data_folder, threshold=3):
     relevant_ents = [e.name for e in kg_clean._entities if e.name.startswith('http://data.odeuropa.eu/smell/')]
 
     ent_triples = []
-    for e in relevant_ents:
-        ent_triples.append((e, entity_index.count(e)))
+    dense_smells = []
+    for e in tqdm(relevant_ents):
+        counting = entity_index.count(e)
+        ent_triples.append((e, counting))
+        if counting > threshold:
+            dense_smells.append(e)
 
     print('#edge distribution: ' + str(Counter(elem[1] for elem in ent_triples)))
 
     print(f'*** KEEP ONLY DENSE SMELLS: THRESHOLD {threshold} ***')
-    df = pd.DataFrame(ent_triples)
-    dense_smells = df[df[1] > threshold][0].tolist()
     relevant_ents = dense_smells
     relevant_triples = []
 
     entity_index2 = []
-    for i, x in enumerate(entity_index):
+    for i, x in tqdm(enumerate(entity_index)):
         if x in relevant_ents:
             relevant_triples.append(data_clean[i])
             entity_index2.append(x)
         else:
             entity_index2.append(None)
+    with open('entity_index_dense.csv', 'w') as f:
+        f.write('\n'.join(entity_index2))
+
 
     kg2 = KG()
-    for s, p, o in relevant_triples:
+    for s, p, o in tqdm(relevant_triples):
         subj = Vertex(s)
         obj = Vertex(o)
         pred = Vertex(p, predicate=True, vprev=subj, vnext=obj)
