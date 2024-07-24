@@ -158,6 +158,7 @@ def train_pykeen(data, algorithm):
         model_kwargs=dict(embedding_dim=embedding_dim),
         training_kwargs=dict(num_epochs=200, batch_size=32),
         random_seed=42)
+    result.save_to_directory(f'odeuropa_{algorithm}')
 
     entity_labels = training.entity_labeling.all_labels()
     # convert entities to ids
