@@ -26,6 +26,17 @@ Following the generated files by the preprocessing, you can run (for example):
 
 This is producing an `[entity].kv` file, which is a [gensim's KeyedVector](https://radimrehurek.com/gensim/models/keyedvectors.html) file.
 
+### Selecting a dense subraph
+
+For generating a dense subgraph, you should run the following scripts
+
+    python reduce_graph.py
+    python generate_dense_subgraph.py
+
+and run again the embedding script with
+
+    python main.py [entities list] [-a algorith_name] -d dense_graph.csv
+
 ## Load and use embeddings
 
 Load embeddings in this way:
@@ -43,5 +54,5 @@ Refer to [gensim's documentation](https://radimrehurek.com/gensim/models/keyedve
 ## Clustering and link predicting
 
 We performed experiment for clustering and link predicting using the following code:
-* Clustering: [notebook](./Clustering.ipynb)
-* Link prediction with TransE and DistMult: [notebook](./link_prediction.py)
+* Clustering: [notebook](./Clustering.ipynb) - [notebook with dense graph](./Clustering-Dense Graph.ipynb)
+* Link prediction with TransE and DistMult: [script](./link_prediction_pykeen.py)

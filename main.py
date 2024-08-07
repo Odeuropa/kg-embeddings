@@ -78,6 +78,7 @@ def run(entities_path, data_folder, algorithm):
                         pred = Vertex(x, predicate=True, vprev=subj, vnext=obj)
                         kg.add_walk(subj, pred, obj)
                         data.append((s, x, o))
+                        preds.append(x)
                         i += 1
                         if i == limit:
                             break

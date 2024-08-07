@@ -1,8 +1,8 @@
 import argparse
-import os
 import csv
+import os
+
 from tqdm import tqdm
-from urllib.parse import unquote
 
 DATA_FOLDER = './data'
 
@@ -20,7 +20,7 @@ def run(data_folder):
                 if first:
                     first = False
                     continue
-                pred = x # unquote(x)
+                pred = x  # unquote(x)
                 nt.write('<%s> <%s> <%s> .\n' % (s, pred, o))
     nt.close()
 
